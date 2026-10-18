@@ -30,6 +30,7 @@ kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serializa
 kotlinx-datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.ref = "datetime" }
 collections-immutable = { module = "org.jetbrains.kotlinx:kotlinx-collections-immutable", version.ref = "collectionsImmutable" }
 kotlinx-benchmark-runtime = { module = "org.jetbrains.kotlinx:kotlinx-benchmark-runtime", version.ref = "kotlinxBenchmark" }
+kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "coroutines" }
 candle-kotlin = { module = "io.github.kotlinmania:candle-kotlin", version.ref = "candle" }
 byteorder-kotlin = { module = "io.github.kotlinmania:byteorder-kotlin", version.ref = "byteorder" }
 rand-kotlin = { module = "io.github.kotlinmania:rand-kotlin", version.ref = "rand" }
@@ -46,4 +47,7 @@ candledatasets-commonMain = [
   "byteorder-kotlin",
   "rand-kotlin",
   "thiserror-kotlin",
+]
+candledatasets-commonTest = [
+  "kotlinx-coroutines-test",
 ]
