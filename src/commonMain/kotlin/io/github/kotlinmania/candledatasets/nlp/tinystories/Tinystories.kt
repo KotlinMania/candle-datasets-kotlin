@@ -57,7 +57,7 @@ public class Dataset internal constructor(
     }
 }
 
-public class DatasetRandomIter(
+public class DatasetRandomIter internal constructor(
     private val allTokens: List<ByteArray>,
     private var tokens: MutableList<ByteArray>,
     private var currentTokens: ByteArray,

@@ -37,23 +37,23 @@ public open class Batcher<I>(
     }
 }
 
-public class Iter1(
+public class Iter1 internal constructor(
     public val inner: Iterator<Tensor>,
 )
 
-public class Iter2(
+public class Iter2 internal constructor(
     public val inner: Iterator<Pair<Tensor, Tensor>>,
 )
 
-public class IterResult1(
+public class IterResult1 internal constructor(
     public val inner: Iterator<CandleResult<Tensor>>,
 )
 
-public class IterResult2(
+public class IterResult2 internal constructor(
     public val inner: Iterator<CandleResult<Pair<Tensor, Tensor>>>,
 )
 
-public class Batcher1(
+public class Batcher1 internal constructor(
     inner: Iter1,
     batchSize: Int = 16,
     returnLastIncompleteBatch: Boolean = false,
@@ -92,7 +92,7 @@ public class Batcher1(
     }
 }
 
-public class Batcher2(
+public class Batcher2 internal constructor(
     inner: Iter2,
     batchSize: Int = 16,
     returnLastIncompleteBatch: Boolean = false,
@@ -136,7 +136,7 @@ public class Batcher2(
     }
 }
 
-public class BatcherResult1(
+public class BatcherResult1 internal constructor(
     inner: IterResult1,
     batchSize: Int = 16,
     returnLastIncompleteBatch: Boolean = false,
@@ -182,7 +182,7 @@ public class BatcherResult1(
     }
 }
 
-public class BatcherResult2(
+public class BatcherResult2 internal constructor(
     inner: IterResult2,
     batchSize: Int = 16,
     returnLastIncompleteBatch: Boolean = false,
