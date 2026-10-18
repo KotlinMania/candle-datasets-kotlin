@@ -54,13 +54,14 @@ public fun readFile(filename: String): Pair<Tensor, Tensor> = readFile(Path(file
 
 public fun loadDir(dir: Path): Dataset {
     val (testImages, testLabels) = readFile(Path(dir, "test_batch.bin"))
-    val trainNames = listOf(
-        "data_batch_1.bin",
-        "data_batch_2.bin",
-        "data_batch_3.bin",
-        "data_batch_4.bin",
-        "data_batch_5.bin",
-    )
+    val trainNames =
+        listOf(
+            "data_batch_1.bin",
+            "data_batch_2.bin",
+            "data_batch_3.bin",
+            "data_batch_4.bin",
+            "data_batch_5.bin",
+        )
     val trainPairs = trainNames.map { readFile(Path(dir, it)) }
     val trainImages = trainPairs.map { it.first }
     val trainLabels = trainPairs.map { it.second }

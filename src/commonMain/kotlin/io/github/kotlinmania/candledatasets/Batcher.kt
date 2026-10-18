@@ -58,7 +58,9 @@ public class Batcher1 internal constructor(
     batchSize: Int = 16,
     returnLastIncompleteBatch: Boolean = false,
 ) : Batcher<Iter1>(inner, batchSize, returnLastIncompleteBatch),
-    Iterator<CandleResult<Tensor>?> {
+    Iterator<CandleResult<Tensor>> {
+    private var nextBatch: CandleResult<Tensor>? = null
+    private var done: Boolean = false
 
     override fun batchSize(batchSize: Int): Batcher1 {
         super.batchSize(batchSize)
@@ -70,25 +72,43 @@ public class Batcher1 internal constructor(
         return this
     }
 
-    override fun hasNext(): Boolean = inner.inner.hasNext()
-
-    override fun next(): CandleResult<Tensor>? {
+    private fun prepareNext() {
+        if (nextBatch != null || done) return
         val items = ArrayList<Tensor>(batchSize)
-        for (i in 0 until batchSize) {
+        while (items.size < batchSize) {
             if (inner.inner.hasNext()) {
                 items.add(inner.inner.next())
             } else {
                 if (returnLastIncompleteBatch && items.isNotEmpty()) {
                     break
+                } else {
+                    done = true
+                    return
                 }
-                return null
             }
         }
-        return try {
-            CandleResult.Ok(Tensor.stack(items, 0))
-        } catch (e: CandleException) {
-            CandleResult.Err(e)
+        if (items.isEmpty()) {
+            done = true
+        } else {
+            nextBatch =
+                try {
+                    CandleResult.Ok(Tensor.stack(items, 0))
+                } catch (e: CandleException) {
+                    CandleResult.Err(e)
+                }
         }
+    }
+
+    override fun hasNext(): Boolean {
+        prepareNext()
+        return nextBatch != null
+    }
+
+    override fun next(): CandleResult<Tensor> {
+        prepareNext()
+        val batch = nextBatch ?: throw NoSuchElementException("No more elements in Batcher")
+        nextBatch = null
+        return batch
     }
 }
 
@@ -97,7 +117,9 @@ public class Batcher2 internal constructor(
     batchSize: Int = 16,
     returnLastIncompleteBatch: Boolean = false,
 ) : Batcher<Iter2>(inner, batchSize, returnLastIncompleteBatch),
-    Iterator<CandleResult<Pair<Tensor, Tensor>>?> {
+    Iterator<CandleResult<Pair<Tensor, Tensor>>> {
+    private var nextBatch: CandleResult<Pair<Tensor, Tensor>>? = null
+    private var done: Boolean = false
 
     override fun batchSize(batchSize: Int): Batcher2 {
         super.batchSize(batchSize)
@@ -109,12 +131,11 @@ public class Batcher2 internal constructor(
         return this
     }
 
-    override fun hasNext(): Boolean = inner.inner.hasNext()
-
-    override fun next(): CandleResult<Pair<Tensor, Tensor>>? {
+    private fun prepareNext() {
+        if (nextBatch != null || done) return
         val xs = ArrayList<Tensor>(batchSize)
         val ys = ArrayList<Tensor>(batchSize)
-        for (i in 0 until batchSize) {
+        while (xs.size < batchSize) {
             if (inner.inner.hasNext()) {
                 val pair = inner.inner.next()
                 xs.add(pair.first)
@@ -122,17 +143,36 @@ public class Batcher2 internal constructor(
             } else {
                 if (returnLastIncompleteBatch && xs.isNotEmpty() && ys.isNotEmpty()) {
                     break
+                } else {
+                    done = true
+                    return
                 }
-                return null
             }
         }
-        return try {
-            val xsStacked = Tensor.stack(xs, 0)
-            val ysStacked = Tensor.stack(ys, 0)
-            CandleResult.Ok(Pair(xsStacked, ysStacked))
-        } catch (e: CandleException) {
-            CandleResult.Err(e)
+        if (xs.isEmpty() || ys.isEmpty()) {
+            done = true
+        } else {
+            nextBatch =
+                try {
+                    val xsStacked = Tensor.stack(xs, 0)
+                    val ysStacked = Tensor.stack(ys, 0)
+                    CandleResult.Ok(Pair(xsStacked, ysStacked))
+                } catch (e: CandleException) {
+                    CandleResult.Err(e)
+                }
         }
+    }
+
+    override fun hasNext(): Boolean {
+        prepareNext()
+        return nextBatch != null
+    }
+
+    override fun next(): CandleResult<Pair<Tensor, Tensor>> {
+        prepareNext()
+        val batch = nextBatch ?: throw NoSuchElementException("No more elements in Batcher")
+        nextBatch = null
+        return batch
     }
 }
 
@@ -141,7 +181,9 @@ public class BatcherResult1 internal constructor(
     batchSize: Int = 16,
     returnLastIncompleteBatch: Boolean = false,
 ) : Batcher<IterResult1>(inner, batchSize, returnLastIncompleteBatch),
-    Iterator<CandleResult<Tensor>?> {
+    Iterator<CandleResult<Tensor>> {
+    private var nextBatch: CandleResult<Tensor>? = null
+    private var done: Boolean = false
 
     override fun batchSize(batchSize: Int): BatcherResult1 {
         super.batchSize(batchSize)
@@ -153,32 +195,52 @@ public class BatcherResult1 internal constructor(
         return this
     }
 
-    override fun hasNext(): Boolean = inner.inner.hasNext()
-
-    override fun next(): CandleResult<Tensor>? {
-        val items = ArrayList<CandleResult<Tensor>>(batchSize)
-        for (i in 0 until batchSize) {
+    private fun prepareNext() {
+        if (nextBatch != null || done) return
+        val items = ArrayList<Tensor>(batchSize)
+        while (items.size < batchSize) {
             if (inner.inner.hasNext()) {
-                items.add(inner.inner.next())
+                when (val item = inner.inner.next()) {
+                    is CandleResult.Ok -> {
+                        items.add(item.value)
+                    }
+
+                    is CandleResult.Err -> {
+                        nextBatch = item
+                        return
+                    }
+                }
             } else {
                 if (returnLastIncompleteBatch && items.isNotEmpty()) {
                     break
+                } else {
+                    done = true
+                    return
                 }
-                return null
             }
         }
-        val unwrapped = ArrayList<Tensor>(items.size)
-        for (item in items) {
-            when (item) {
-                is CandleResult.Ok -> unwrapped.add(item.value)
-                is CandleResult.Err -> return item
-            }
+        if (items.isEmpty()) {
+            done = true
+        } else {
+            nextBatch =
+                try {
+                    CandleResult.Ok(Tensor.stack(items, 0))
+                } catch (e: CandleException) {
+                    CandleResult.Err(e)
+                }
         }
-        return try {
-            CandleResult.Ok(Tensor.stack(unwrapped, 0))
-        } catch (e: CandleException) {
-            CandleResult.Err(e)
-        }
+    }
+
+    override fun hasNext(): Boolean {
+        prepareNext()
+        return nextBatch != null
+    }
+
+    override fun next(): CandleResult<Tensor> {
+        prepareNext()
+        val batch = nextBatch ?: throw NoSuchElementException("No more elements in Batcher")
+        nextBatch = null
+        return batch
     }
 }
 
@@ -187,7 +249,9 @@ public class BatcherResult2 internal constructor(
     batchSize: Int = 16,
     returnLastIncompleteBatch: Boolean = false,
 ) : Batcher<IterResult2>(inner, batchSize, returnLastIncompleteBatch),
-    Iterator<CandleResult<Pair<Tensor, Tensor>>?> {
+    Iterator<CandleResult<Pair<Tensor, Tensor>>> {
+    private var nextBatch: CandleResult<Pair<Tensor, Tensor>>? = null
+    private var done: Boolean = false
 
     override fun batchSize(batchSize: Int): BatcherResult2 {
         super.batchSize(batchSize)
@@ -199,37 +263,55 @@ public class BatcherResult2 internal constructor(
         return this
     }
 
-    override fun hasNext(): Boolean = inner.inner.hasNext()
-
-    override fun next(): CandleResult<Pair<Tensor, Tensor>>? {
+    private fun prepareNext() {
+        if (nextBatch != null || done) return
         val xs = ArrayList<Tensor>(batchSize)
         val ys = ArrayList<Tensor>(batchSize)
-        val errs = ArrayList<Throwable>()
-        for (i in 0 until batchSize) {
+        while (xs.size < batchSize) {
             if (inner.inner.hasNext()) {
-                when (val result = inner.inner.next()) {
+                when (val item = inner.inner.next()) {
                     is CandleResult.Ok -> {
-                        xs.add(result.value.first)
-                        ys.add(result.value.second)
+                        xs.add(item.value.first)
+                        ys.add(item.value.second)
                     }
-                    is CandleResult.Err -> errs.add(result.error)
+
+                    is CandleResult.Err -> {
+                        nextBatch = item
+                        return
+                    }
                 }
             } else {
                 if (returnLastIncompleteBatch && xs.isNotEmpty() && ys.isNotEmpty()) {
                     break
+                } else {
+                    done = true
+                    return
                 }
-                return null
             }
         }
-        if (errs.isNotEmpty()) {
-            return CandleResult.Err(errs.removeAt(0))
+        if (xs.isEmpty() || ys.isEmpty()) {
+            done = true
+        } else {
+            nextBatch =
+                try {
+                    val xsStacked = Tensor.stack(xs, 0)
+                    val ysStacked = Tensor.stack(ys, 0)
+                    CandleResult.Ok(Pair(xsStacked, ysStacked))
+                } catch (e: CandleException) {
+                    CandleResult.Err(e)
+                }
         }
-        return try {
-            val xsStacked = Tensor.stack(xs, 0)
-            val ysStacked = Tensor.stack(ys, 0)
-            CandleResult.Ok(Pair(xsStacked, ysStacked))
-        } catch (e: CandleException) {
-            CandleResult.Err(e)
-        }
+    }
+
+    override fun hasNext(): Boolean {
+        prepareNext()
+        return nextBatch != null
+    }
+
+    override fun next(): CandleResult<Pair<Tensor, Tensor>> {
+        prepareNext()
+        val batch = nextBatch ?: throw NoSuchElementException("No more elements in Batcher")
+        nextBatch = null
+        return batch
     }
 }

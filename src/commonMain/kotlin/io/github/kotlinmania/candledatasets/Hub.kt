@@ -3,10 +3,20 @@ package io.github.kotlinmania.candledatasets
 
 import io.github.kotlinmania.candle.bail
 
-public sealed class Error(message: String) : Exception(message) {
-    public data class HubError(val error: String) : Error("HubError : $error")
-    public data class IoError(val error: String) : Error("IoError : $error")
-    public data class ParquetError(val error: String) : Error("ParquetError : $error")
+public sealed class Error(
+    message: String,
+) : Exception(message) {
+    public data class HubError(
+        val error: String,
+    ) : Error("HubError : $error")
+
+    public data class IoError(
+        val error: String,
+    ) : Error("IoError : $error")
+
+    public data class ParquetError(
+        val error: String,
+    ) : Error("ParquetError : $error")
 }
 
 public const val PARQUET_REVISION: String = "refs/convert/parquet"

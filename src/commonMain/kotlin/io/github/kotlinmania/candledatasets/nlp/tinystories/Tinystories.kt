@@ -64,8 +64,7 @@ public class DatasetRandomIter internal constructor(
     private var indexesInBytes: MutableList<Int>,
     private val seqLen: Int,
     private val device: Device,
-) : Iterator<CandleResult<Pair<Tensor, Tensor>>?> {
-
+) : Iterator<CandleResult<Pair<Tensor, Tensor>>> {
     public companion object {
         public fun new(ds: Dataset, valid: Boolean, seqLen: Int, device: Device): DatasetRandomIter {
             val allTokens = if (valid) ds.validTokens else ds.trainTokens
@@ -88,7 +87,7 @@ public class DatasetRandomIter internal constructor(
 
     override fun hasNext(): Boolean = true
 
-    override fun next(): CandleResult<Pair<Tensor, Tensor>>? {
+    override fun next(): CandleResult<Pair<Tensor, Tensor>> {
         val seqLen = this.seqLen
         if (indexesInBytes.isEmpty()) {
             if (tokens.isEmpty()) {
@@ -96,7 +95,7 @@ public class DatasetRandomIter internal constructor(
                 tokens.shuffle(rng())
             }
             if (tokens.isEmpty()) {
-                return null
+                throw NoSuchElementException("Tokens exhausted")
             }
             currentTokens = tokens.removeAt(tokens.size - 1)
             val seqLenInBytes = seqLen * 2
@@ -104,12 +103,12 @@ public class DatasetRandomIter internal constructor(
             indexesInBytes.shuffle(rng())
         }
         if (indexesInBytes.isEmpty()) {
-            return null
+            throw NoSuchElementException("Indexes exhausted")
         }
         val startIdx = indexesInBytes.removeAt(indexesInBytes.size - 1)
         val endIdx = startIdx + 2 * (seqLen + 1)
         if (endIdx > currentTokens.size) {
-            return null
+            throw NoSuchElementException("Insufficient tokens for sequence")
         }
         val tokenCount = seqLen + 1
         val decodedTokens = UIntArray(tokenCount)
