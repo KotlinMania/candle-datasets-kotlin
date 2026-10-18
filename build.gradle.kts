@@ -1368,6 +1368,71 @@ if (napiFfiEnabled) {
     }
 }
 
+// Propagate JNI and N-API native bindings from composite includedBuilds
+val extraJavaLibPaths = mutableListOf<String>()
+if (jvmFfiEnabled) {
+    extraJavaLibPaths.add(
+        layout.buildDirectory
+            .dir("natives")
+            .get()
+            .asFile.absolutePath,
+    )
+}
+gradle.includedBuilds.forEach { ib ->
+    val ibPropsFile = File(ib.projectDir, "gradle.properties")
+    if (ibPropsFile.exists()) {
+        val ibProps =
+            ibPropsFile
+                .readLines()
+                .map { it.trim() }
+                .filter { it.isNotEmpty() && !it.startsWith("#") && '=' in it }
+                .associate { it.substringBefore('=').trim() to it.substringAfter('=').trim() }
+        val ibFfiRaw = (ibProps["project.ffi.name"] ?: "Ffi").trim()
+        val ibFfiName = ibFfiRaw.replaceFirstChar { it.uppercase() }
+        val ibFfiLower = ibFfiRaw.lowercase()
+        val ibJvmFfi = (ibProps["project.ffi.jvm"] ?: "false").trim().lowercase() == "true"
+        val ibNapiFfi = (ibProps["project.ffi.napi"] ?: "false").trim().lowercase() == "true"
+
+        if (ibJvmFfi) {
+            extraJavaLibPaths.add(File(ib.projectDir, "build/natives").absolutePath)
+            tasks.named<Test>("jvmTest") {
+                dependsOn(ib.task(":compile${ibFfiName}Jni"))
+            }
+        }
+        if (ibNapiFfi) {
+            val copyIbNode =
+                tasks.register<Copy>("copyIncludedNode$ibFfiName") {
+                    dependsOn(ib.task(":buildNode$ibFfiName"), "kotlinNpmInstall")
+                    from(File(ib.projectDir, "native/node-$ibFfiLower"))
+                    into(layout.buildDirectory.dir("js/node_modules/@kotlinmania/$ibFfiLower-native-bindings"))
+                    outputs.upToDateWhen { File(destinationDir, "package.json").exists() }
+                }
+            val copyIbWasmNode =
+                tasks.register<Copy>("copyIncludedWasmNode$ibFfiName") {
+                    dependsOn(ib.task(":buildNode$ibFfiName"), "kotlinWasmNpmInstall")
+                    from(File(ib.projectDir, "native/node-$ibFfiLower"))
+                    into(layout.buildDirectory.dir("wasm/node_modules/@kotlinmania/$ibFfiLower-native-bindings"))
+                    outputs.upToDateWhen { File(destinationDir, "package.json").exists() }
+                }
+            tasks
+                .matching {
+                    it.name.startsWith("jsNodeTest") ||
+                        it.name.startsWith("jsBrowserTest") ||
+                        it.name.startsWith("wasmJsNodeTest") ||
+                        it.name.startsWith("wasmJsBrowserTest") ||
+                        it.name.contains("Webpack")
+                }.configureEach {
+                    dependsOn(copyIbNode, copyIbWasmNode)
+                }
+        }
+    }
+}
+if (extraJavaLibPaths.isNotEmpty()) {
+    tasks.named<Test>("jvmTest") {
+        systemProperty("java.library.path", extraJavaLibPaths.joinToString(File.pathSeparator))
+    }
+}
+
 // Explicit test runner. Named hostTests to avoid shadowing the KMP allTests
 // lifecycle task. Do not use findByName/mapNotNull here: missing test tasks
 // mean the target surface drifted and must fail loudly.
