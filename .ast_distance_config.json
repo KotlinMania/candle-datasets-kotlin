@@ -1,0 +1,22 @@
+{
+  "type": "port",
+  "name": "candle-datasets-kotlin",
+  "source": {
+    "path": "tmp/candle-datasets/src",
+    "lang": "rust"
+  },
+  "target": {
+    "path": "src/commonMain/kotlin/io/github/kotlinmania/candledatasets",
+    "lang": "kotlin"
+  },
+  "checks": {
+    "deep": true,
+    "missing": true,
+    "todos": true,
+    "lint": true
+  },
+  "reexport_modules": [
+    "mod.rs",
+    "lib.rs"
+  ]
+}
