@@ -335,10 +335,19 @@ fun requestedTaskWantsAndroid(rawTaskName: String): Boolean {
     val taskName = rawTaskName.substringAfterLast(':')
     if (taskName.contains("AndroidNative")) return false // Kotlin/Native, no SDK
     if (taskName.contains("Android")) return true // direct AGP tasks
-    return taskName in setOf("build", "assemble", "check") // aggregates pull android
+    return taskName in setOf("build", "assemble", "check", "test", "hostTests") // aggregates pull android
 }
 
-if (gradle.startParameter.taskNames.any(::requestedTaskWantsAndroid)) {
+val allRequestedTaskNames =
+    buildList {
+        var currentGradle: org.gradle.api.invocation.Gradle? = gradle
+        while (currentGradle != null) {
+            addAll(currentGradle.startParameter.taskNames)
+            currentGradle = currentGradle.parent
+        }
+    }
+
+if (allRequestedTaskNames.any(::requestedTaskWantsAndroid)) {
     installProjectAndroidSdk(serviceOf())
 }
 
@@ -1356,6 +1365,71 @@ if (napiFfiEnabled) {
         }
     tasks.matching { it.name.startsWith("jsNodeTest") || it.name.startsWith("wasmJsNodeTest") }.configureEach {
         dependsOn(copyNodeFfi)
+    }
+}
+
+// Propagate JNI and N-API native bindings from composite includedBuilds
+val extraJavaLibPaths = mutableListOf<String>()
+if (jvmFfiEnabled) {
+    extraJavaLibPaths.add(
+        layout.buildDirectory
+            .dir("natives")
+            .get()
+            .asFile.absolutePath,
+    )
+}
+gradle.includedBuilds.forEach { ib ->
+    val ibPropsFile = File(ib.projectDir, "gradle.properties")
+    if (ibPropsFile.exists()) {
+        val ibProps =
+            ibPropsFile
+                .readLines()
+                .map { it.trim() }
+                .filter { it.isNotEmpty() && !it.startsWith("#") && '=' in it }
+                .associate { it.substringBefore('=').trim() to it.substringAfter('=').trim() }
+        val ibFfiRaw = (ibProps["project.ffi.name"] ?: "Ffi").trim()
+        val ibFfiName = ibFfiRaw.replaceFirstChar { it.uppercase() }
+        val ibFfiLower = ibFfiRaw.lowercase()
+        val ibJvmFfi = (ibProps["project.ffi.jvm"] ?: "false").trim().lowercase() == "true"
+        val ibNapiFfi = (ibProps["project.ffi.napi"] ?: "false").trim().lowercase() == "true"
+
+        if (ibJvmFfi) {
+            extraJavaLibPaths.add(File(ib.projectDir, "build/natives").absolutePath)
+            tasks.named<Test>("jvmTest") {
+                dependsOn(ib.task(":compile${ibFfiName}Jni"))
+            }
+        }
+        if (ibNapiFfi) {
+            val copyIbNode =
+                tasks.register<Copy>("copyIncludedNode$ibFfiName") {
+                    dependsOn(ib.task(":buildNode$ibFfiName"), "kotlinNpmInstall")
+                    from(File(ib.projectDir, "native/node-$ibFfiLower"))
+                    into(layout.buildDirectory.dir("js/node_modules/@kotlinmania/$ibFfiLower-native-bindings"))
+                    outputs.upToDateWhen { File(destinationDir, "package.json").exists() }
+                }
+            val copyIbWasmNode =
+                tasks.register<Copy>("copyIncludedWasmNode$ibFfiName") {
+                    dependsOn(ib.task(":buildNode$ibFfiName"), "kotlinWasmNpmInstall")
+                    from(File(ib.projectDir, "native/node-$ibFfiLower"))
+                    into(layout.buildDirectory.dir("wasm/node_modules/@kotlinmania/$ibFfiLower-native-bindings"))
+                    outputs.upToDateWhen { File(destinationDir, "package.json").exists() }
+                }
+            tasks
+                .matching {
+                    it.name.startsWith("jsNodeTest") ||
+                        it.name.startsWith("jsBrowserTest") ||
+                        it.name.startsWith("wasmJsNodeTest") ||
+                        it.name.startsWith("wasmJsBrowserTest") ||
+                        it.name.contains("Webpack")
+                }.configureEach {
+                    dependsOn(copyIbNode, copyIbWasmNode)
+                }
+        }
+    }
+}
+if (extraJavaLibPaths.isNotEmpty()) {
+    tasks.named<Test>("jvmTest") {
+        systemProperty("java.library.path", extraJavaLibPaths.joinToString(File.pathSeparator))
     }
 }
 
