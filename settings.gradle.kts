@@ -16,3 +16,14 @@ dependencyResolutionManagement {
 }
 
 rootProject.name = "candle-datasets-kotlin"
+
+listOf(
+    "../candle-kotlin",
+    "../byteorder-kotlin",
+    "../rand-kotlin",
+    "../thiserror-kotlin",
+).forEach { path ->
+    if (file(path).exists()) {
+        includeBuild(path)
+    }
+}

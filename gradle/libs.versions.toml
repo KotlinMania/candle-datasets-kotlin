@@ -9,6 +9,10 @@ detekt = "2.0.0-alpha.6"
 ktlint = "14.2.0"
 ktlintEngine = "1.8.0"
 kotlinxBenchmark = "0.5.0"
+candle = "0.2.1"
+byteorder = "2.0.0"
+rand = "0.2.0"
+thiserror = "0.2.1"
 
 [plugins]
 kotlin-multiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
@@ -26,6 +30,10 @@ kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serializa
 kotlinx-datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.ref = "datetime" }
 collections-immutable = { module = "org.jetbrains.kotlinx:kotlinx-collections-immutable", version.ref = "collectionsImmutable" }
 kotlinx-benchmark-runtime = { module = "org.jetbrains.kotlinx:kotlinx-benchmark-runtime", version.ref = "kotlinxBenchmark" }
+candle-kotlin = { module = "io.github.kotlinmania:candle-kotlin", version.ref = "candle" }
+byteorder-kotlin = { module = "io.github.kotlinmania:byteorder-kotlin", version.ref = "byteorder" }
+rand-kotlin = { module = "io.github.kotlinmania:rand-kotlin", version.ref = "rand" }
+thiserror-kotlin = { module = "io.github.kotlinmania:thiserror-kotlin", version.ref = "thiserror" }
 
 [bundles]
 candledatasets-commonMain = [
@@ -34,4 +42,8 @@ candledatasets-commonMain = [
   "kotlinx-serialization-json",
   "kotlinx-datetime",
   "collections-immutable",
+  "candle-kotlin",
+  "byteorder-kotlin",
+  "rand-kotlin",
+  "thiserror-kotlin",
 ]
