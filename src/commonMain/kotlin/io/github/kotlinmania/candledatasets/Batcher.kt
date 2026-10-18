@@ -10,12 +10,12 @@ public open class Batcher<I>(
     public var batchSize: Int = 16,
     public var returnLastIncompleteBatch: Boolean = false,
 ) {
-    public fun batchSize(batchSize: Int): Batcher<I> {
+    public open fun batchSize(batchSize: Int): Batcher<I> {
         this.batchSize = batchSize
         return this
     }
 
-    public fun returnLastIncompleteBatch(r: Boolean): Batcher<I> {
+    public open fun returnLastIncompleteBatch(r: Boolean): Batcher<I> {
         this.returnLastIncompleteBatch = r
         return this
     }
@@ -60,6 +60,16 @@ public class Batcher1<I : Iterator<Tensor>>(
 ) : Batcher<Iter1<I>>(inner, batchSize, returnLastIncompleteBatch),
     Iterator<CandleResult<Tensor>?> {
 
+    override fun batchSize(batchSize: Int): Batcher1<I> {
+        super.batchSize(batchSize)
+        return this
+    }
+
+    override fun returnLastIncompleteBatch(r: Boolean): Batcher1<I> {
+        super.returnLastIncompleteBatch(r)
+        return this
+    }
+
     override fun hasNext(): Boolean = inner.inner.hasNext()
 
     override fun next(): CandleResult<Tensor>? {
@@ -88,6 +98,16 @@ public class Batcher2<I : Iterator<Pair<Tensor, Tensor>>>(
     returnLastIncompleteBatch: Boolean = false,
 ) : Batcher<Iter2<I>>(inner, batchSize, returnLastIncompleteBatch),
     Iterator<CandleResult<Pair<Tensor, Tensor>>?> {
+
+    override fun batchSize(batchSize: Int): Batcher2<I> {
+        super.batchSize(batchSize)
+        return this
+    }
+
+    override fun returnLastIncompleteBatch(r: Boolean): Batcher2<I> {
+        super.returnLastIncompleteBatch(r)
+        return this
+    }
 
     override fun hasNext(): Boolean = inner.inner.hasNext()
 
@@ -122,6 +142,16 @@ public class BatcherResult1<I : Iterator<CandleResult<Tensor>>>(
     returnLastIncompleteBatch: Boolean = false,
 ) : Batcher<IterResult1<I>>(inner, batchSize, returnLastIncompleteBatch),
     Iterator<CandleResult<Tensor>?> {
+
+    override fun batchSize(batchSize: Int): BatcherResult1<I> {
+        super.batchSize(batchSize)
+        return this
+    }
+
+    override fun returnLastIncompleteBatch(r: Boolean): BatcherResult1<I> {
+        super.returnLastIncompleteBatch(r)
+        return this
+    }
 
     override fun hasNext(): Boolean = inner.inner.hasNext()
 
@@ -158,6 +188,16 @@ public class BatcherResult2<I : Iterator<CandleResult<Pair<Tensor, Tensor>>>>(
     returnLastIncompleteBatch: Boolean = false,
 ) : Batcher<IterResult2<I>>(inner, batchSize, returnLastIncompleteBatch),
     Iterator<CandleResult<Pair<Tensor, Tensor>>?> {
+
+    override fun batchSize(batchSize: Int): BatcherResult2<I> {
+        super.batchSize(batchSize)
+        return this
+    }
+
+    override fun returnLastIncompleteBatch(r: Boolean): BatcherResult2<I> {
+        super.returnLastIncompleteBatch(r)
+        return this
+    }
 
     override fun hasNext(): Boolean = inner.inner.hasNext()
 

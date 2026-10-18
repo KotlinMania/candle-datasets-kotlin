@@ -7,6 +7,7 @@ import io.github.kotlinmania.candle.Shape
 import io.github.kotlinmania.candle.Tensor
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertIs
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
@@ -23,12 +24,12 @@ class BatcherTest {
 
         val batch1 = batcher.next()
         assertNotNull(batch1)
-        assertTrue(batch1 is CandleResult.Ok)
+        assertIs<CandleResult.Ok<Tensor>>(batch1)
         assertEquals(listOf(2, 2), batch1.value.shape().dims())
 
         val batch2 = batcher.next()
         assertNotNull(batch2)
-        assertTrue(batch2 is CandleResult.Ok)
+        assertIs<CandleResult.Ok<Tensor>>(batch2)
         assertEquals(listOf(2, 2), batch2.value.shape().dims())
 
         val batch3 = batcher.next()
@@ -46,7 +47,7 @@ class BatcherTest {
 
         val batch1 = batcher.next()
         assertNotNull(batch1)
-        assertTrue(batch1 is CandleResult.Ok)
+        assertIs<CandleResult.Ok<Tensor>>(batch1)
         assertEquals(listOf(2, 1), batch1.value.shape().dims())
 
         val batch2 = batcher.next()
@@ -64,12 +65,12 @@ class BatcherTest {
 
         val batch1 = batcher.next()
         assertNotNull(batch1)
-        assertTrue(batch1 is CandleResult.Ok)
+        assertIs<CandleResult.Ok<Tensor>>(batch1)
         assertEquals(listOf(2, 1), batch1.value.shape().dims())
 
         val batch2 = batcher.next()
         assertNotNull(batch2)
-        assertTrue(batch2 is CandleResult.Ok)
+        assertIs<CandleResult.Ok<Tensor>>(batch2)
         assertEquals(listOf(1, 1), batch2.value.shape().dims())
 
         val batch3 = batcher.next()
@@ -88,13 +89,13 @@ class BatcherTest {
 
         val batch1 = batcher.next()
         assertNotNull(batch1)
-        assertTrue(batch1 is CandleResult.Ok)
+        assertIs<CandleResult.Ok<Pair<Tensor, Tensor>>>(batch1)
         assertEquals(listOf(2, 1), batch1.value.first.shape().dims())
         assertEquals(listOf(2, 1), batch1.value.second.shape().dims())
 
         val batch2 = batcher.next()
         assertNotNull(batch2)
-        assertTrue(batch2 is CandleResult.Ok)
+        assertIs<CandleResult.Ok<Pair<Tensor, Tensor>>>(batch2)
 
         val batch3 = batcher.next()
         assertNull(batch3)
@@ -102,7 +103,7 @@ class BatcherTest {
 
     @Test
     fun testBatcherResult1() {
-        val results = List(4) { i ->
+        val results: List<CandleResult<Tensor>> = List(4) { i ->
             CandleResult.Ok(Tensor.new(floatArrayOf(i.toFloat()), Shape(1), Device.Cpu))
         }
         val batcher = Batcher.newR1(results.iterator())
@@ -110,13 +111,13 @@ class BatcherTest {
 
         val batch1 = batcher.next()
         assertNotNull(batch1)
-        assertTrue(batch1 is CandleResult.Ok)
+        assertIs<CandleResult.Ok<Tensor>>(batch1)
         assertEquals(listOf(2, 1), batch1.value.shape().dims())
     }
 
     @Test
     fun testBatcherResult2() {
-        val results = List(4) { i ->
+        val results: List<CandleResult<Pair<Tensor, Tensor>>> = List(4) { i ->
             val x = Tensor.new(floatArrayOf(i.toFloat()), Shape(1), Device.Cpu)
             val y = Tensor.new(floatArrayOf((i * 2).toFloat()), Shape(1), Device.Cpu)
             CandleResult.Ok(Pair(x, y))
@@ -126,7 +127,7 @@ class BatcherTest {
 
         val batch1 = batcher.next()
         assertNotNull(batch1)
-        assertTrue(batch1 is CandleResult.Ok)
+        assertIs<CandleResult.Ok<Pair<Tensor, Tensor>>>(batch1)
         assertEquals(listOf(2, 1), batch1.value.first.shape().dims())
         assertEquals(listOf(2, 1), batch1.value.second.shape().dims())
     }
