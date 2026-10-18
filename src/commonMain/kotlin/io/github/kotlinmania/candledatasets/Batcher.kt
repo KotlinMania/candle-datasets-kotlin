@@ -164,7 +164,7 @@ public class BatcherResult2<I : Iterator<CandleResult<Pair<Tensor, Tensor>>>>(
     override fun next(): CandleResult<Pair<Tensor, Tensor>>? {
         val xs = ArrayList<Tensor>(batchSize)
         val ys = ArrayList<Tensor>(batchSize)
-        val errs = ArrayList<CandleException>()
+        val errs = ArrayList<Throwable>()
         for (i in 0 until batchSize) {
             if (inner.inner.hasNext()) {
                 when (val result = inner.inner.next()) {

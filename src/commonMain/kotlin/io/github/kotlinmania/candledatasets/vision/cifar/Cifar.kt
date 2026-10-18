@@ -1,5 +1,5 @@
 // port-lint: source vision/cifar.rs
-package io.github.kotlinmania.candledatasets.vision
+package io.github.kotlinmania.candledatasets.vision.cifar
 
 /**
  * The CIFAR-10 dataset.
@@ -13,6 +13,7 @@ import io.github.kotlinmania.candle.DType
 import io.github.kotlinmania.candle.Device
 import io.github.kotlinmania.candle.Shape
 import io.github.kotlinmania.candle.Tensor
+import io.github.kotlinmania.candledatasets.vision.Dataset
 import io.github.kotlinmania.candle.bail
 import io.github.kotlinmania.io.buffered
 import io.github.kotlinmania.io.files.Path

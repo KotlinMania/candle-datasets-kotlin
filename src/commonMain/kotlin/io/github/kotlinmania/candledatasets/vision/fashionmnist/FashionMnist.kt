@@ -1,5 +1,8 @@
 // port-lint: source vision/fashion_mnist.rs
-package io.github.kotlinmania.candledatasets.vision
+package io.github.kotlinmania.candledatasets.vision.fashionmnist
+
+import io.github.kotlinmania.candledatasets.vision.Dataset
+import io.github.kotlinmania.candledatasets.vision.mnist.loadMnistLike
 
 /**
  * Zalando Fashion MNIST dataset.

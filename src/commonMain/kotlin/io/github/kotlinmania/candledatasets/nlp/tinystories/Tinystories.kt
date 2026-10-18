@@ -1,5 +1,5 @@
 // port-lint: source nlp/tinystories.rs
-package io.github.kotlinmania.candledatasets.nlp
+package io.github.kotlinmania.candledatasets.nlp.tinystories
 
 /**
  * Helper functions for the tinystories dataset. This uses the pre-tokenized version as generated

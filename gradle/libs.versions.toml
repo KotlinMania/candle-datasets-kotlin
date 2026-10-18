@@ -13,6 +13,7 @@ candle = "0.2.1"
 byteorder = "2.0.0"
 rand = "0.2.0"
 thiserror = "0.2.1"
+kmIo = "0.2.0"
 
 [plugins]
 kotlin-multiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
@@ -35,6 +36,7 @@ candle-kotlin = { module = "io.github.kotlinmania:candle-kotlin", version.ref = 
 byteorder-kotlin = { module = "io.github.kotlinmania:byteorder-kotlin", version.ref = "byteorder" }
 rand-kotlin = { module = "io.github.kotlinmania:rand-kotlin", version.ref = "rand" }
 thiserror-kotlin = { module = "io.github.kotlinmania:thiserror-kotlin", version.ref = "thiserror" }
+km-io = { module = "io.github.kotlinmania:km-io", version.ref = "kmIo" }
 
 [bundles]
 candledatasets-commonMain = [
@@ -47,6 +49,7 @@ candledatasets-commonMain = [
   "byteorder-kotlin",
   "rand-kotlin",
   "thiserror-kotlin",
+  "km-io",
 ]
 candledatasets-commonTest = [
   "kotlinx-coroutines-test",
