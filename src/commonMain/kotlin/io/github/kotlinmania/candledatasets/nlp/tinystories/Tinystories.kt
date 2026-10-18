@@ -20,9 +20,9 @@ import io.github.kotlinmania.io.readByteArray
 import io.github.kotlinmania.rand.rngs.rng
 import io.github.kotlinmania.rand.seq.shuffle
 
-public class Dataset(
-    public val validTokens: List<ByteArray>,
-    public val trainTokens: List<ByteArray>,
+public class Dataset internal constructor(
+    internal val validTokens: List<ByteArray>,
+    internal val trainTokens: List<ByteArray>,
 ) {
     public fun trainTokens(): Int = trainTokens.size
 
