@@ -48,7 +48,7 @@ public fun readImages(filename: Path): Tensor {
     val dataLen = samples * rows * cols
     val data = bufReader.readByteArray(dataLen)
     val tensor = Tensor.new(data.toUByteArray(), Shape(samples, rows * cols), Device.Cpu)
-    return (tensor.toDType(DType.F32) / 255.0)
+    return (tensor.toDtype(DType.F32) / 255.0)
 }
 
 public fun readImages(filename: String): Tensor = readImages(Path(filename))

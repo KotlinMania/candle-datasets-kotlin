@@ -13,8 +13,9 @@ import io.github.kotlinmania.candle.DType
 import io.github.kotlinmania.candle.Device
 import io.github.kotlinmania.candle.Shape
 import io.github.kotlinmania.candle.Tensor
-import io.github.kotlinmania.candledatasets.vision.Dataset
 import io.github.kotlinmania.candle.bail
+import io.github.kotlinmania.candle.cat
+import io.github.kotlinmania.candledatasets.vision.Dataset
 import io.github.kotlinmania.io.buffered
 import io.github.kotlinmania.io.files.Path
 import io.github.kotlinmania.io.files.SystemFileSystem
@@ -32,10 +33,11 @@ public fun readFile(filename: Path): Pair<Tensor, Tensor> {
     val labels = UByteArray(SAMPLES_PER_FILE)
     val images = UByteArray(SAMPLES_PER_FILE * C * H * W)
     val imageSize = W * H * C
+    val uData = data.asUByteArray()
     for (index in 0 until SAMPLES_PER_FILE) {
         val contentOffset = BYTES_PER_IMAGE * index
-        labels[index] = data[contentOffset].toUByte()
-        data.copyInto(
+        labels[index] = uData[contentOffset]
+        uData.copyInto(
             destination = images,
             destinationOffset = index * imageSize,
             startIndex = 1 + contentOffset,
@@ -44,7 +46,7 @@ public fun readFile(filename: Path): Pair<Tensor, Tensor> {
     }
     val labelTensor = Tensor.new(labels, Shape(SAMPLES_PER_FILE), Device.Cpu)
     val imageTensor = Tensor.new(images, Shape(SAMPLES_PER_FILE, C, H, W), Device.Cpu)
-    val normalizedImages = (imageTensor.toDType(DType.F32) / 255.0)
+    val normalizedImages = (imageTensor.toDtype(DType.F32) / 255.0)
     return Pair(normalizedImages, labelTensor)
 }
 
